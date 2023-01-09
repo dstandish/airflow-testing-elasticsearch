@@ -1,0 +1,26 @@
+image: docker.elastic.co/beats/filebeat-oss
+
+daemonset:
+  filebeatConfig:
+    filebeat.yml: |
+      filebeat.inputs:
+        - type: log
+          paths:
+            - /opt/airflow/logs/*/*/*/*.log
+          json:
+            keys_under_root: true
+      output.elasticsearch:
+        hosts: ["https://elasticsearch-master:9200"]
+        index: "filebeat-oss-%{[agent.version]}-%{+yyyy.MM.dd}"
+        ssl:
+          verification_mode: none
+      setup.ilm.enabled: false
+      setup.template.name: "filebeat"
+      setup.template.pattern: "filebeat-oss-*"
+  extraVolumes:
+    - name: logs
+      persistentVolumeClaim:
+        claimName: my-logs-pvc
+  extraVolumeMounts:
+    - name: logs
+      mountPath: /opt/airflow/logs
